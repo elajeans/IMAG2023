@@ -47,7 +47,7 @@ ax.set_title('Oppgave 3: Poisson equation — Analytical vs Numerical')
 ax.legend()
 ax.grid(True)
 plt.tight_layout()
-plt.savefig('/mnt/user-data/outputs/oppgave3.png', dpi=150)
+plt.savefig('oppgave3.png', dpi=150)
 plt.show()
 
 max_err = np.max(np.abs(u_ana_full - u_num_full))
