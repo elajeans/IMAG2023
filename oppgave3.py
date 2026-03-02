@@ -1,13 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# =============================================================
 # OPPGAVE 3: Poissonligning 1D
 # u_xx = cos(πx),  -1 <= x <= 1
 # Randbetingelser: u(-1) = 0, u(1) = 2
-# =============================================================
 
-# --- Analytisk løsning ---
 # Integrer cos(πx) to ganger:
 #   u'(x)  = sin(πx)/π + C1
 #   u(x)   = -cos(πx)/π² + C1*x + C2
