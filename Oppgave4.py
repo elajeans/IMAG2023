@@ -1,13 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# =============================================================
 # OPPGAVE 4: Varmeligning 1D
 # u_t = u_xx - cos(πx),  t>=0, -1<x<1
 # Initialbetingelse: u(x,0) = 1 + x + 5*sin(πx)
 # Randbetingelser:   u(-1,t) = 0,  u(1,t) = 2
 # Metode: Forlengs Euler (eksplisitt)
-# =============================================================
 
 M  = 200
 dx = 2.0 / (M + 1)
