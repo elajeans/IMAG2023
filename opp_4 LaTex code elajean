@@ -4,236 +4,131 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
-\usepackage{booktabs}
-\usepackage{xcolor}
-\usepackage{listings}
-\usepackage{graphicx}
-\usepackage{mdframed}
+\usepackage{parskip}
 \geometry{margin=2.5cm}
-
-\newmdenv[linecolor=blue!50, linewidth=1.2pt,
-          backgroundcolor=blue!4,
-          innertopmargin=6pt, innerbottommargin=6pt]{answerbox}
-
-\lstdefinestyle{py}{
-  language=Python,
-  basicstyle=\ttfamily\small,
-  keywordstyle=\color{blue!70!black},
-  commentstyle=\color{green!40!black}\itshape,
-  stringstyle=\color{red!50!black},
-  showstringspaces=false,
-  frame=single,
-  breaklines=true,
-  tabsize=2,
-  numbers=left,
-  numberstyle=\tiny\color{gray}
-}
-
-\title{\textbf{Oppgave 4: Varmeligning (1D)}\\[0.3em]
-\large Numerisk løsning med forlengs Euler}
-\author{}
+\setlength{\parskip}{4pt}
+\title{Oppgave 4: Varmeligning (1D)}
 \date{}
-
 \begin{document}
 \maketitle
 
-% ============================================================
-\section{Problemstilling}
-% ============================================================
-
-Vi skal løse den endimensjonale varmeligningen:
+\section*{Problemstilling}
+Vi skal løse varmeligningen
 \[
 u_t(x,t) = u_{xx}(x,t) - \cos(\pi x),
 \qquad t \geq 0,\quad -1 < x < 1,
 \]
-med initialbetingelse:
+med initialbetingelse
 \[
 u(x,0) = 1 + x + 5\sin(\pi x),
 \]
-og Dirichlet-randbetingelser som holdes konstante for alle $t \geq 0$:
+og Dirichlet-randbetingelser
 \[
 u(-1,t) = 0, \qquad u(1,t) = 2.
 \]
+Varmeligningen beskriver hvordan temperaturfordelingen utvikler seg over tid.
+Starttilstanden inneholder en sinuskomponent $5\sin(\pi x)$, men denne dempes
+gradvis av diffusjon. Etter hvert forsvinner tidsavhengigheten ($u_t \to 0$),
+og løsningen konvergerer mot den stasjonære løsningen av Poissonligningen
+fra Oppgave 3.
 
-Varmeligningen er en tidsavhengig variant av Poissonligningen.
-Legg merke til at en eventuell likevektstilstand med $u_t = 0$
-faktisk løser Poissonligningen fra Oppgave 3.
-
-% ============================================================
-\section{Diskretisering}
-% ============================================================
-
-\subsection*{Romgitter (samme som Oppgave 3)}
-
-Vi bruker $m = 100$ indre punkter med steglengde:
+\section*{Diskretisering i rom}
+For å løse ligningen numerisk erstatter vi den kontinuerlige funksjonen
+med verdier i diskrete punkter $x_i$ i et romgitter.
+Vi bruker samme romgitter som i Oppgave 3 med $m = 100$ indre punkter
+og steglengde
 \[
-h = \frac{2}{m+1}, \qquad x_i = -1 + ih, \quad i = 0,1,\dots,m+1.
+h = \frac{2}{m+1} \approx 0.0198.
 \]
-Med $m=100$ gir dette $h \approx 0.0198$.
-
-\subsection*{Formel A -- Romlig diskretisering (sentral differanse)}
-
-Via Taylors teorem approksimeres andrederiverte som:
+Andrederivert approksimeres med sentral differanse:
 \[
-u_{xx}(x_i,t^n) \approx \frac{1}{h^2}\bigl(u(x_i+h,t^n) - 2u(x_i,t^n) + u(x_i-h,t^n)\bigr).
+u_{xx}(x_i, t^n)
+\approx
+\frac{u_{i-1}^n - 2u_i^n + u_{i+1}^n}{h^2}.
 \]
-I diskret form med $u_i^n \approx u(x_i, t^n)$:
+Denne approksimasjonen erstatter den kontinuerlige andrederiverte
+med en kombinasjon av nabopunktene $u_{i-1}$, $u_i$ og $u_{i+1}$.
+Dermed kobles hvert punkt i gitteret til sine nærmeste naboer.
+Dette gir Laplace-matrisen
 \[
-\boxed{
-u_{xx}(x_i,t^n) \approx \frac{u_{i-1}^n - 2u_i^n + u_{i+1}^n}{h^2}
-}
-\]
-
-\subsection*{Formel B -- Laplace-matrisen $L$ og systemmatrise $A$}
-
-Den lineære avbildningen fra notatet er:
-\[
-L : u_n \mapsto \frac{u_{n+1} - 2u_n + u_{n-1}}{h^2}, \qquad n = 1,\dots,m,
-\]
-som $m \times m$-matrise:
-\[
-L = \frac{1}{h^2}
+L=\frac{1}{h^2}
 \begin{pmatrix}
--2 &  1 &  0 & \cdots &  0 \\
- 1 & -2 &  1 & \ddots & \vdots \\
- 0 & \ddots & \ddots & \ddots &  0 \\
-\vdots & \ddots &  1 & -2 &  1 \\
- 0 & \cdots &  0 &  1 & -2
+-2 & 1 & & \\
+1 & -2 & 1 & \\
+& \ddots & \ddots & \ddots \\
+& & 1 & -2
 \end{pmatrix}.
 \]
-Fra notatet tilnærmes varmeligningen $u_t = c^2 u_{xx} - f(x)$
-med ODE-systemet:
+Med $c=1$ får vi systemmatrisen $A = c^2L = L$.
+Varmeligningen kan da skrives som ODE-systemet
 \[
-\vec{u}_t = c^2 L\vec{u} - \vec{F}, \qquad \vec{u}(0) = \vec{g},
+\vec{u}_t = A\vec{u} - \vec{F},
+\qquad \vec{u}(0) = \vec{g},
 \]
-der $\vec{g}$ er vektoren med initialbetingelsene $g_i = u(x_i, 0)$.
-Vi definerer $A = c^2 L$ med $c = 1$.
-
-\subsection*{Høyreside $\vec{F}$ med Dirichlet-korreksjon}
-
-Fra notatet justeres $\vec{F}$ for randverdiene $a = u(-1) = 0$ og $B = u(1) = 2$:
+der $\vec{g}$ er vektoren gitt av initialbetingelsen og
+$\vec{F}$ er høyresiden med innlagte Dirichlet-randbetingelser:
 \[
-\boxed{
-F_1 \leftarrow f(x_1) - \frac{c^2 \cdot a}{h^2}, \qquad
-F_m \leftarrow f(x_m) - \frac{c^2 \cdot B}{h^2}.
-}
-\]
-Altså trekker vi fra $c^2 \cdot 0 / h^2 = 0$ på venstre side og
-$c^2 \cdot 2 / h^2$ på høyre side.
-
-% ============================================================
-\section{Forlengs Euler i tid}
-% ============================================================
-
-\subsection*{Formel C -- Tidsdiskretisering (forover-differanse)}
-
-Tidsderivert approksimeres med forover-differanse:
-\[
-u_t(x_i, t^n) \approx \frac{u_i^{n+1} - u_i^n}{\Delta t}.
-\]
-Setter vi inn i PDE og løser for $u_i^{n+1}$:
-\[
-\boxed{
-u_i^{n+1} = u_i^n + \Delta t\left(
-\frac{u_{i-1}^n - 2u_i^n + u_{i+1}^n}{h^2} - \cos(\pi x_i)
-\right), \quad i = 1,\dots,m.
-}
-\]
-På matriseform fra notatet:
-\[
-\vec{u}_{n+1} = \vec{u}_n + \Delta t\,(A\vec{u}_n - \vec{F})
-              = (I + \Delta t\, A)\vec{u}_n - \Delta t\,\vec{F}.
+F_1 \leftarrow f(x_1) - \frac{0}{h^2},
+\qquad
+F_m \leftarrow f(x_m) - \frac{2}{h^2}.
 \]
 
-\subsection*{Formel D -- Stabilitetsvilkåret (CFL)}
-
-Fra notatet fungerer forlengs Euler kun hvis steglengdene oppfyller:
+\section*{Tidsdiskretisering --- forlengs Euler}
+Tidsderivert approksimeres med forover-differanse
 \[
-\boxed{
-r = c^2\,\frac{\Delta t}{h^2} < \frac{1}{2}.
-}
+u_t \approx \frac{u_i^{n+1}-u_i^n}{\Delta t}.
 \]
-Med $c = 1$ og valget $r = 0.4$ (trygt under grensen):
+Setter vi dette inn i PDE-en og løser for $u_i^{n+1}$, får vi
 \[
-\Delta t = 0.4\,h^2 \approx 1.57 \times 10^{-4}.
+u_i^{n+1}
+=
+u_i^n
++
+\Delta t
+\left(
+\frac{u_{i-1}^n - 2u_i^n + u_{i+1}^n}{h^2}
+-
+\cos(\pi x_i)
+\right),
+\qquad i=1,\dots,m.
 \]
-Fra notatet: \textit{resultatet blir numerisk ustabil hvis dette kravet ikke
-oppfylles, da $u_i$ vil gå raskt mot uendelig.}
+På matriseform skrives dette som
+\[
+\mathbf{u}^{n+1}
+=
+\mathbf{u}^n
++
+\Delta t\,(A\mathbf{u}^n - \vec{F}).
+\]
 
-Med $T = 2.0$ og dette valget av $\Delta t$ får vi omtrent $N \approx 12\,752$ tidssteg.
+\section*{Stabilitet}
+Forlengs Euler er stabil dersom
+\[
+r = c^2\frac{\Delta t}{h^2} < \frac{1}{2}.
+\]
+Siden $c=1$ får vi $r = \Delta t/h^2$.
+Vi velger $r = 0.4$, altså $\Delta t = 0.4\,h^2 \approx 1.57 \times 10^{-4}$,
+og dermed omtrent $N \approx 12\,752$ tidssteg for $T = 2.0$.
 
-% ============================================================
-\section{Resultater og sammenheng med Oppgave 3}
-% ============================================================
-
-\subsection*{Tidsutviklingen}
-
-Løsningen plottes ved fire tidspunkt:
-
-\begin{center}
-\begin{tabular}{cl}
-\toprule
-Tidspunkt & Observasjon \\
-\midrule
-$t = 0.00$ & Stor sinusbølge fra $5\sin(\pi x)$ i starttilstanden \\
-$t \approx 0.10$ & Sinusbølgen er nesten borte -- rask demping \\
-$t \approx 0.50$ & Løsningen nærmer seg stasjonær form \\
-$t = 2.00$ & Konvergert mot stasjonær løsning fra Oppgave 3 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\subsection*{Sammenheng med Oppgave 3}
-
-Fra notatet: varmeligningen kan sees på som en tidsavhengig variant
-av Poissonligningen, og en likevektstilstand med $u_t = 0$ løser
-Poissonligningen. Når $t \to \infty$ er løsningen stasjonær, altså $u_t = 0$:
+\section*{Sammenheng med Oppgave 3}
+Når $t \to \infty$ blir løsningen stasjonær og $u_t = 0$.
+Da får vi
 \[
 0 = u_{xx} - \cos(\pi x)
 \quad \Rightarrow \quad
 u_{xx} = \cos(\pi x).
 \]
 Dette er nøyaktig Poissonligningen fra Oppgave 3 med samme randbetingelser.
-Den stasjonære løsningen er:
+Den stasjonære løsningen er
 \[
-u_\infty(x) = -\frac{\cos(\pi x)}{\pi^2} + x + 1 - \frac{1}{\pi^2}.
+u_\infty(x)
+=
+-\frac{\cos(\pi x)}{\pi^2}
++ x + 1 - \frac{1}{\pi^2}.
 \]
+Løsningen til varmeligningen konvergerer derfor mot denne når $t \to \infty$.
 
-\subsection*{Python-kode}
+\medskip
+Den fullstendige implementasjonen er gitt i Python-filen \texttt{oppgave4.py}.
 
-Se vedlagt fil \texttt{oppgave4.py} for fullstendig implementasjon.
-
-% ============================================================
-\section{Konklusjon}
-% ============================================================
-
-\begin{itemize}
-\item \textbf{Romlig diskretisering (Formel A):}
-      Sentral differanse gir $u_{xx} \approx (u_{i-1}-2u_i+u_{i+1})/h^2$,
-      andreordens nøyaktig.
-
-\item \textbf{ODE-system (Formel B):}
-      Varmeligningen skrives som $\vec{u}_t = A\vec{u} - \vec{F}$
-      med Laplace-matrisen $A = c^2 L$ og Dirichlet-korreksjon i $\vec{F}$.
-
-\item \textbf{Tidssteg (Formel C):}
-      Forlengs Euler: $u_i^{n+1} = u_i^n + \Delta t\,(A\vec{u}^n - \vec{F})_i$.
-
-\item \textbf{Stabilitet (Formel D):}
-      Krav $r = \Delta t/h^2 < 0.5$ må oppfylles.
-      Vi bruker $r = 0.4$, som gir $\Delta t \approx 1.57\times10^{-4}$
-      og $N \approx 12\,752$ tidssteg.
-
-\item \textbf{Stasjonær løsning:}
-      Løsningen konvergerer mot Poissonligningens løsning fra Oppgave 3
-      når $t \to \infty$.
-\end{itemize}
-\section{Resultater og sammenheng med Oppgave 3}
-
-Varmeligningen beskriver hvordan temperaturfordelingen utvikler
-seg over tid. Starttilstanden inneholder en sinuskomponent
-$5\sin(\pi x)$, men denne dempes gradvis av diffusjon.
-Etter hvert forsvinner tidsavhengigheten ($u_t \to 0$),
-og løsningen konvergerer mot den stasjonære løsningen
-av Poissonligningen fra Oppgave 3.
 \end{document}
