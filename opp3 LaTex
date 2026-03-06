@@ -1,0 +1,265 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[norsk]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{mdframed}
+\geometry{margin=2.5cm}
+
+\newmdenv[linecolor=blue!50, linewidth=1.2pt,
+          backgroundcolor=blue!4,
+          innertopmargin=6pt, innerbottommargin=6pt]{answerbox}
+
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{green!40!black}\itshape,
+  stringstyle=\color{red!50!black},
+  showstringspaces=false,
+  frame=single,
+  breaklines=true,
+  tabsize=2,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Oppgave 3: Poissonligning (1D)}\\[0.3em]
+\large Analytisk og numerisk løsning}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+% ============================================================
+\section{Problemstilling}
+% ============================================================
+
+Vi skal løse Poissonligningen i én dimensjon:
+\[
+u_{xx}(x) = f(x), \qquad -1 \leq x \leq 1,
+\]
+der $f(x) = \cos(\pi x)$, med \textbf{Dirichlet-randbetingelser}:
+\[
+u(-1) = 0, \qquad u(1) = 2.
+\]
+Dirichletbetingelser betyr at verdien av løsningen er gitt på randpunktene.
+I denne oppgaven er
+\[
+u(-1)=0,\qquad u(1)=2.
+\]
+
+% ============================================================
+\section{(a) Analytisk løsning}
+% ============================================================
+
+Den analytiske løsningen finnes ved å integrere ligningen to ganger.
+Integrasjonskonstantene bestemmes fra randbetingelsene.
+
+\paragraph{Steg 1 -- Første integrasjon}
+\[
+u_x(x) = \int \cos(\pi x)\, dx = \frac{1}{\pi}\sin(\pi x) + C_1.
+\]
+
+\paragraph{Steg 2 -- Andre integrasjon}
+\[
+u(x) = \int \left(\frac{1}{\pi}\sin(\pi x) + C_1\right) dx
+     = -\frac{1}{\pi^2}\cos(\pi x) + C_1 x + C_2.
+\]
+Vi har nå to ukjente $C_1$ og $C_2$, som bestemmes av de to randbetingelsene.
+
+\paragraph{Steg 3 -- Bruk randbetingelsene}
+
+\textit{Venstre rand} $x = -1$, merk at $\cos(-\pi) = -1$:
+\begin{align*}
+u(-1) = 0
+&\;\Rightarrow\; -\frac{\cos(-\pi)}{\pi^2} + C_1(-1) + C_2 = 0 \\
+&\;\Rightarrow\; -\frac{(-1)}{\pi^2} - C_1 + C_2 = 0 \\
+&\;\Rightarrow\; \frac{1}{\pi^2} - C_1 + C_2 = 0. \tag{i}
+\end{align*}
+
+\textit{Høyre rand} $x = 1$, merk at $\cos(\pi) = -1$:
+\begin{align*}
+u(1) = 2
+&\;\Rightarrow\; -\frac{\cos(\pi)}{\pi^2} + C_1(1) + C_2 = 2 \\
+&\;\Rightarrow\; \frac{1}{\pi^2} + C_1 + C_2 = 2. \tag{ii}
+\end{align*}
+
+\paragraph{Steg 4 -- Løs for $C_1$ og $C_2$}
+
+Adderer (i) og (ii):
+\[
+\frac{2}{\pi^2} + 2C_2 = 2
+\;\Rightarrow\; C_2 = 1 - \frac{1}{\pi^2}.
+\]
+Subtraherer (i) fra (ii):
+\[
+2C_1 = 2 \;\Rightarrow\; C_1 = 1.
+\]
+
+\paragraph{Analytisk løsning}
+\begin{answerbox}
+\[
+u(x) = -\frac{\cos(\pi x)}{\pi^2} + x + 1 - \frac{1}{\pi^2}
+\]
+\end{answerbox}
+
+% ============================================================
+\section{(b) Numerisk løsning med finite differanser}
+% ============================================================
+
+\subsection*{Romgitter}
+
+Vi diskretiserer $[-1,1]$ med $m$ indre punkter og steglengde
+\[
+h = \frac{2}{m+1}, \qquad x_i = -1 + ih, \quad i = 0, 1, \dots, m+1.
+\]
+Randverdiene er $u_0 = 0$ og $u_{m+1} = 2$. De $m$ indre verdiene
+$u_1, \dots, u_m$ er ukjente.
+
+\subsection*{Formel A -- Diskretisering av $u_{xx}$ (sentral differanse)}
+
+Fra notatet, via Taylors teorem:
+\[
+u_{xx}(x_i) \approx \frac{1}{h^2}\bigl(u(x_i+h) - 2u(x_i) + u(x_i-h)\bigr).
+\]
+Den sentrale differansen er andreordens nøyaktig, altså med feil av orden $\mathcal{O}(h^2)$. I diskret form med $u_i \approx u(x_i)$ får vi
+\[
+\boxed{
+u_{xx}(x_i) \approx \frac{u_{i-1} - 2u_i + u_{i+1}}{h^2}
+}
+\]
+Setter vi dette inn i $u_{xx}(x_i) = \cos(\pi x_i)$ for $i = 1, \dots, m$:
+\[
+\frac{u_{i-1} - 2u_i + u_{i+1}}{h^2} = \cos(\pi x_i).
+\]
+
+\subsection*{Formel B -- Laplace-matrisen $L$ (fra notatet)}
+
+Den diskrete operatoren kan skrives som:
+\[
+L : u_n \mapsto \frac{u_{n+1} - 2u_n + u_{n-1}}{h^2}, \qquad n = 1, \dots, m.
+\]
+Som $m \times m$-matrise:
+\[
+\boxed{
+L = \frac{1}{h^2}
+\begin{pmatrix}
+-2 &  1 &  0 & \cdots &  0 \\
+ 1 & -2 &  1 & \ddots & \vdots \\
+ 0 & \ddots & \ddots & \ddots &  0 \\
+\vdots & \ddots &  1 & -2 &  1 \\
+ 0 & \cdots &  0 &  1 & -2
+\end{pmatrix}
+}
+\]
+Matrisen er tridiagonal fordi hvert punkt $x_i$ kun kobles til sine nærmeste
+naboer $x_{i-1}$ og $x_{i+1}$.
+
+Dette gir systemet $L\mathbf{u} = \mathbf{b}$ med høyreside
+\[
+b_i = \cos(\pi x_i), \qquad i = 1, \dots, m.
+\]
+
+\subsection*{Innlegging av Dirichlet-randbetingelser}
+
+Første ligning inneholder $u_0 = 0$ og siste inneholder $u_{m+1} = 2$.
+Disse flyttes til høyresiden:
+\[
+\boxed{
+b_1 \leftarrow b_1 - \frac{u_0}{h^2} = b_1 - \frac{0}{h^2},
+\qquad
+b_m \leftarrow b_m - \frac{u_{m+1}}{h^2} = b_m - \frac{2}{h^2}.
+}
+\]
+Deretter løses $L\mathbf{u} = \mathbf{b}$ for de indre ukjente, og den fullstendig løsningen settes sammen som:
+\[
+[u_0,\, u_1, \dots, u_m,\, u_{m+1}] = [0,\; u_1, \dots, u_m,\; 2].
+\]
+
+\subsection*{Feilanalyse}
+
+Den sentrale differansen er andreordens nøyaktig, altså er feilen av orden $\mathcal{O}(h^2)$. For $m=4$ får vi:
+\[
+\max_i |u_i - u(x_i)| = 2.62 \times 10^{-2}.
+\]
+
+\subsection*{Python-kode med formler i kommentarer}
+
+\begin{lstlisting}[style=py]
+import numpy as np
+import matplotlib.pyplot as plt
+
+# --- Analytisk losning: u(x) = -cos(pi*x)/pi^2 + x + 1 - 1/pi^2 ---
+def u_analytisk(x):
+    return -np.cos(np.pi * x) / np.pi**2 + x + 1 - 1/np.pi**2
+
+# --- Romgitter: h = 2/(m+1),  x_i = -1 + i*h ---
+m = 4
+x = np.linspace(-1, 1, m + 2)
+h = x[1] - x[0]
+
+# --- Formel B: Laplace-matrise L = (1/h^2)*tridiag(1,-2,1) ---
+L = (1/h**2) * (
+    np.diag((m-1)*[1], -1) +   # nedre bidiagonal (+1)
+    np.diag(m*[-2],    0)  +   # hoveddiagonal  (-2)
+    np.diag((m-1)*[1], 1)      # øvre bidiagonal  (+1)
+)
+
+# --- Formel A: b_i = cos(pi*x_i), høyreside for u_xx = cos(pi*x) ---
+f = np.cos(np.pi * x[1:-1])
+b = f.copy()           # .copy() -- viktig for ikke a odelegge f
+
+# --- Dirichlet-korreksjon: b_1 -= u_0/h^2,  b_m -= u_{m+1}/h^2 ---
+b[0]  -= 0 / h**2     # u(-1) = 0
+b[-1] -= 2 / h**2     # u( 1) = 2
+
+# --- Løs L*u = b ---
+u_inner = np.linalg.solve(L, b)
+u = np.concatenate([[0], u_inner, [2]])
+
+# --- Feil: max_i |u_i - u(x_i)| ---
+print(f"m={m}, h={h:.4f}, maks feil = {np.max(np.abs(u-u_analytisk(x))):.2e}")
+
+# --- Plot ---
+x_fine = np.linspace(-1, 1, 500)
+plt.figure(figsize=(8, 5))
+plt.plot(x_fine, u_analytisk(x_fine), 'b-',  lw=2.5, label='Analytisk')
+plt.plot(x,      u,                   'r--', lw=2,   label=f'Numerisk (m={m})')
+plt.xlabel('$x$');  plt.ylabel('$u(x)$')
+plt.title('Oppgave 3: $u_{xx} = \\cos(\\pi x)$, '
+          'Dirichlet: $u(-1)=0$, $u(1)=2$')
+plt.legend();  plt.grid(True)
+plt.savefig('oppgave3.pdf', bbox_inches='tight')
+plt.show()
+\end{lstlisting}
+
+% ============================================================
+\section{Konklusjon}
+% ============================================================
+
+\begin{itemize}
+\item \textbf{Analytisk (Formel -- dobbel integrasjon):}
+      $u(x) = -\cos(\pi x)/\pi^2 + x + 1 - 1/\pi^2$,
+      funnet ved å integrere $\cos(\pi x)$ to ganger og bruke
+      Dirichletbetingelsene til å finne $C_1=1$ og $C_2=1-1/\pi^2$.
+
+\item \textbf{Numerisk (Formel A -- sentral differanse):}
+      $u_{xx}(x_i) \approx (u_{i-1}-2u_i+u_{i+1})/h^2$ gir det
+      tridiagonale systemet $L\mathbf{u}=\mathbf{b}$.
+
+\item \textbf{Numerisk (Formel B -- Laplace-matrisen):}
+      $L = (1/h^2)\,\text{tridiag}(1,-2,1)$ løses direkte med
+      \texttt{np.linalg.solve}.
+
+\item \textbf{Nøyaktighet:} Sentral differanse er andreordens nøyaktig,
+      $\mathcal{O}(h^2)$. Med $m=4$ er maksfeil $2.62\times10^{-2}$.
+\end{itemize}
+
+\end{document}
