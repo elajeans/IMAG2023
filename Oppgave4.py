@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 # Randbetingelser:    u(-1, t) = 0   og   u(1, t) = 2
 
 # --- Romgitter ---
-m = 100                        # antall indre punkter
-x = np.linspace(-1, 1, m + 2)  # Romgitter inkl. randpunktene x=-1 og x=1
+m = 100
+x = np.linspace(-1, 1, m + 2)
 h = x[1] - x[0]
 
-# Bygg matrise L og kildeled f(x) = cos(pi*x)
+# Bygg matrise L og kildeledd f(x) = cos(pi*x)
 L = (1 / h**2) * (
     np.diag((m - 1) * [1], -1) +
     np.diag(m * [-2], 0) +
@@ -20,17 +20,25 @@ L = (1 / h**2) * (
 f = np.cos(np.pi * x[1:-1])
 
 # --- Fysiske parametere og randbetingelser ---
-c = 1   # varmeledningsevne
+c = 1
 a = 0   # u(-1) = a
 B = 2   # u( 1) = B
 
-A = (c**2) * L    #varmeligningen er ut=c**2*uxx+f
+A = (c**2) * L    # u_t = c^2*u_xx - f
 
-# --- Hoyreside og randbidrag  ---
+# --- Høyreside og randbidrag ---
 F = f.copy()
-F[0]  -= (c**2) * a / h**2    # bidrag fra venste rand
-F[-1] -= (c**2) * B / h**2    # bidrag fra høyre rand
+F[0]  -= (c**2) * a / h**2
+F[-1] -= (c**2) * B / h**2
 
+# --- Tid og stabilitet ---
+T = 2.0
+dt = 0.4 * h**2
+N = int(T / dt) + 1
+
+print("h =", h)
+print("dt =", dt)
+print("r =", c**2 * dt / h**2)
 
 # --- Forlengs Euler-funksjon ---
 def euler(g, x0, t0, t1, N):
@@ -42,7 +50,7 @@ def euler(g, x0, t0, t1, N):
         out[n + 1, :] = out[n, :] + dt * g(out[n, :], t[n])
     return out, t
 
-# --- Hoyreside for ODE ---
+# --- Høyreside for ODE ---
 def g(u, t):
     return A @ u - F
 
@@ -57,7 +65,7 @@ idx1 = N // 20
 idx2 = N // 4
 idx3 = N - 1
 
-# --- Stasjonaer losning (fra oppgave 3) ---
+# --- Stasjonær løsning (fra oppgave 3) ---
 def u_stasjonaer(x):
     return -np.cos(np.pi * x) / np.pi**2 + x + 1 - 1/np.pi**2
 
@@ -67,10 +75,10 @@ plt.plot(x[1:-1], u_varme[0,    :], label=f"t = {t[0]:.2f}")
 plt.plot(x[1:-1], u_varme[idx1, :], label=f"t = {t[idx1]:.2f}")
 plt.plot(x[1:-1], u_varme[idx2, :], label=f"t = {t[idx2]:.2f}")
 plt.plot(x[1:-1], u_varme[idx3, :], label=f"t = {t[idx3]:.2f}")
-plt.plot(x,       u_stasjonaer(x),  "k--", linewidth=2, label="Stasjonaer (opp. 3)")
+plt.plot(x,       u_stasjonaer(x),  "k--", linewidth=2, label="Stasjonær (oppg. 3)")
 plt.xlabel("x")
-plt.ylabel("u(x, t)")
-plt.title("Varmeligning: u_t = u_xx - cos(pi*x)")
+plt.ylabel("u(x,t)")
+plt.title(r"Varmeligning: $u_t = u_{xx} - \cos(\pi x)$")
 plt.legend()
 plt.grid(True)
 plt.show()
