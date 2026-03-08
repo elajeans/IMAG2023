@@ -11,6 +11,7 @@
 \setlength{\parskip}{4pt}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{url}
 
 \lstset{
   language=Python,
@@ -120,6 +121,21 @@ $x$-retning.
 \includegraphics[width=0.8\textwidth]{oppgave5.png}
 \caption{Numerisk løsning av Laplacelikningen etter 5000 Jacobi-iterasjoner.}
 \end{figure}
+\medskip
+Den fullstendige kildekoden er tilgjengelig på GitHub:
+https://github.com/elajeans/IMAG2023/blob/main/oppgave%205%20simon.ipynb
 
+\section*{Kilder}
+
+\begin{itemize}
+
+\item NTNU (2026). \textit{Uke 6 – første uke i PDE-modulen}.  
+Kursmateriale i partielle differensiallikninger (Canvas).  
+\url{https://canvas.ntnu.no/courses/18866/pages/uke-6-forste-uke-i-pde-modulen}
+
+\item NTNU. \textit{Notater om Poissonligningen og varmeligningen}.  
+\url{https://aacchhee.github.io/ingmat2_ntnu/pages/page12.html}
+
+\end{itemize}
 
 \end{document}
