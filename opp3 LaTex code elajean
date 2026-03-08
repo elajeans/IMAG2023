@@ -1,76 +1,178 @@
-\documentclass[10pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
+
 \usepackage[norsk]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{url}
+
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
 \usepackage{parskip}
-\geometry{margin=1.8cm}
-\setlength{\parskip}{3pt}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{titling}
+\usepackage{titlesec}
 
-\title{\vspace{-1.5cm}Oppgave 3: Poissonligning (1D)}
+\geometry{margin=2cm}
+
+% compress vertical spacing
+\setlength{\parskip}{2pt}
+\setlength{\abovedisplayskip}{6pt}
+\setlength{\belowdisplayskip}{6pt}
+\setlength{\textfloatsep}{8pt}
+\setlength{\intextsep}{8pt}
+
+% reduce title spacing
+\setlength{\droptitle}{-1.2cm}
+
+% compact section spacing
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+
+% slightly tighter line spacing
+\linespread{0.97}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{black},
+  backgroundcolor=\color{gray!5},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  literate={ø}{{\o}}1 {Ø}{{\O}}1 {å}{{\aa}}1 {Å}{{\AA}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1
+}
+
+\title{Oppgave 3: Poissonligning (1D)}
 \date{}
+
 \begin{document}
 \maketitle
-\vspace{-0.8cm}
 
-\section*{Problem}
+\section*{Problemstilling}
+
 Vi skal løse Poissonligningen
-\(u_{xx}(x) = \cos(\pi x)\), \(-1 \leq x \leq 1\),
-med Dirichlet-randbetingelser \(u(-1)=0\) og \(u(1)=2\).
+\[
+  u_{xx}(x) = \cos(\pi x), \qquad -1 \leq x \leq 1,
+\]
+med Dirichlet-randbetingelser
+\[
+  u(-1) = 0, \qquad u(1) = 2.
+\]
 
 \section*{(a) Analytisk løsning}
-Ligningen integreres to ganger:
+
+Ligningen integreres to ganger med hensyn på $x$:
 \[
-u_x(x)=\frac{1}{\pi}\sin(\pi x)+C_1, \qquad
-u(x)=-\frac{\cos(\pi x)}{\pi^2}+C_1x+C_2.
+\begin{aligned}
+u_x(x) &= \frac{1}{\pi}\sin(\pi x) + C_1 \\
+u(x) &= -\frac{\cos(\pi x)}{\pi^2} + C_1 x + C_2
+\end{aligned}
 \]
-Ved $x=-1$ (merk at $\cos(-\pi)=-1$) og $x=1$ (merk at $\cos(\pi)=-1$)
-gir randbetingelsene systemet
+Randbetingelsene gir systemet (merk at $\cos(-\pi) = \cos(\pi) = -1$):
 \[
-\frac{1}{\pi^2}-C_1+C_2=0,
-\qquad
-\frac{1}{\pi^2}+C_1+C_2=2.
+\begin{aligned}
+u(-1)=0 &: \frac{1}{\pi^2}-C_1+C_2=0 \\
+u(1)=2 &: \frac{1}{\pi^2}+C_1+C_2=2
+\end{aligned}
 \]
-Dette gir $C_1=1$ og $C_2=1-1/\pi^2$.
-Den analytiske løsningen blir derfor
+Addisjon og subtraksjon av likningene gir $C_1 = 1$ og $C_2 = 1 - 1/\pi^2$.
+Den analytiske løsningen er dermed
 \[
-u(x)=-\frac{\cos(\pi x)}{\pi^2}+x+1-\frac{1}{\pi^2}.
+  \boxed{u(x) = -\frac{\cos(\pi x)}{\pi^2} + x + 1 - \frac{1}{\pi^2}.}
 \]
 
 \section*{(b) Numerisk løsning}
-Intervallet $[-1,1]$ diskretiseres med $m$ indre punkter og steglengde
-$h=2/(m+1)$.
-Andrederivert approksimeres med sentral differanse
+
+\subsection*{Diskretisering}
+
+Intervallet $[-1,1]$ diskretiseres med $m = 4$ indre punkter og steglengde
 \[
-u_{xx}(x_i)\approx
-\frac{u_{i-1}-2u_i+u_{i+1}}{h^2},
-\qquad i=1,\dots,m.
+  h = \frac{2}{m+1} = \frac{2}{5} = 0.4.
 \]
-Dette gir et lineært system $L\mathbf{u}=\mathbf{b}$, der
+Andrederivert approksimeres med sentral differanse:
 \[
-L=\frac{1}{h^2}
-\begin{pmatrix}
--2 & 1 & & \\
-1 & -2 & 1 & \\
-& \ddots & \ddots & \ddots \\
-& & 1 & -2
-\end{pmatrix},
-\qquad
-b_i=\cos(\pi x_i).
+  u_{xx}(x_i) \approx
+  \frac{u_{i-1} - 2u_i + u_{i+1}}{h^2}, \qquad i = 1, \dots, m.
+\]
+Dette gir det lineære systemet $L\mathbf{u} = \mathbf{b}$, der
+\[
+  L = \frac{1}{h^2}
+  \begin{pmatrix}
+    -2 & 1 & & \\
+    1 & -2 & 1 & \\
+    & \ddots & \ddots & \ddots \\
+    & & 1 & -2
+  \end{pmatrix},
+  \qquad
+  b_i = \cos(\pi x_i).
 \]
 Dirichlet-randbetingelsene tas inn i høyresiden:
 \[
-b_1 \leftarrow b_1-\frac{u(-1)}{h^2}=b_1-\frac{0}{h^2},
-\qquad
-b_m \leftarrow b_m-\frac{u(1)}{h^2}=b_m-\frac{2}{h^2}.
+  b_1 \leftarrow b_1 - \frac{u(-1)}{h^2} = b_1 - \frac{0}{h^2},
+  \qquad
+  b_m \leftarrow b_m - \frac{u(1)}{h^2} = b_m - \frac{2}{h^2}.
 \]
-Systemet løses for de indre ukjente $u_1,\dots,u_m$, og løsningen blir
-$[0,\,u_1,\dots,u_m,\,2]$.
-For $m=4$ får vi maksimal feil mot analytisk løsning
+Systemet løses for de indre ukjente $u_1, \dots, u_m$,
+og den fullstendige løsningsvektoren er $[0,\, u_1, \dots, u_m,\, 2]$.
+
+\subsection*{Implementasjon}
+
+Laplace-matrisen $L$ bygges med \texttt{numpy.diag}, og systemet løses
+med \texttt{numpy.linalg.solve}. De aktuelle linjene er:
+
+\begin{lstlisting}[caption={Implementasjon av den numeriske løsningen}]
+m = 4
+x = np.linspace(-1, 1, m + 2)   # inkluderer randpunktene
+h = x[1] - x[0]
+
+# Bygg Laplace-matrisen L (m x m)
+L = (1 / h**2) * (
+    np.diag((m-1) * [1], -1) +
+    np.diag(m     * [-2], 0) +
+    np.diag((m-1) * [1],  1)
+)
+
+# Høyreside med randbetingelser
+f = np.cos(np.pi * x[1:-1])
+b = f.copy()
+b[0]  -= 0 / h**2    # u(-1) = 0
+b[-1] -= 2 / h**2    # u(1)  = 2
+
+# Løs systemet og sett sammen full løsning
+u_inner = np.linalg.solve(L, b)
+u = np.concatenate([[0], u_inner, [2]])
+\end{lstlisting}
+
+\subsection*{Resultat}
+
+Den maksimale feilen mot den analytiske løsningen er
 \[
-\max_i |u_i-u(x_i)| \approx 2.62\times10^{-2}.
+  \max_i |u_i - u(x_i)| \approx 2.62 \times 10^{-2}.
 \]
-Den fullstendige implementasjonen er gitt i Python-filen \texttt{oppgave3.py}.
+Figuren nedenfor sammenligner den numeriske ($m = 4$) og analytiske løsningen.
+Kurven er nesten sammenfallende, noe som bekrefter at selv et grovt gitter
+gir god nøyaktighet for denne ligningen.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{oppgave3.png}
+  \caption{Analytisk løsning (heltrukket blå) og numerisk løsning med
+           $m = 4$ indre punkter (stiplet rød) av Poissonligningen.}
+\end{figure}
+
+\medskip
+Den fullstendige kildekoden er tilgjengelig på GitHub:
+https://github.com/elajeans/IMAG2023/blob/main/oppgave3%20elajean%20.ipynb
 
 \end{document}
