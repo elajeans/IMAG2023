@@ -2,56 +2,105 @@
 \usepackage[norsk]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{url}
+
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
 \usepackage{parskip}
-\geometry{margin=2.5cm}
-\setlength{\parskip}{4pt}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{titling}
+\usepackage{titlesec}
+
+\geometry{margin=2cm}
+
+% compress vertical spacing
+\setlength{\parskip}{2pt}
+\setlength{\abovedisplayskip}{6pt}
+\setlength{\belowdisplayskip}{6pt}
+\setlength{\textfloatsep}{8pt}
+\setlength{\intextsep}{8pt}
+
+% reduce title spacing
+\setlength{\droptitle}{-1.2cm}
+
+% compact section spacing
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+
+% slightly tighter line spacing
+\linespread{0.97}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  breaklines=true,
+  frame=single,
+  showstringspaces=false
+}
+
 \title{Oppgave 4: Varmeligning (1D)}
 \date{}
+
 \begin{document}
 \maketitle
 
 \section*{Problemstilling}
+
 Vi skal løse varmeligningen
+
 \[
 u_t(x,t) = u_{xx}(x,t) - \cos(\pi x),
-\qquad t \geq 0,\quad -1 < x < 1,
+\qquad t \ge 0,\; -1 < x < 1,
 \]
+
 med initialbetingelse
+
 \[
 u(x,0) = 1 + x + 5\sin(\pi x),
 \]
+
 og Dirichlet-randbetingelser
+
 \[
-u(-1,t) = 0, \qquad u(1,t) = 2.
+u(-1,t)=0, \qquad u(1,t)=2.
 \]
+
 Varmeligningen beskriver hvordan temperaturfordelingen utvikler seg over tid.
-Starttilstanden inneholder en sinuskomponent $5\sin(\pi x)$, men denne dempes
-gradvis av diffusjon. Etter hvert forsvinner tidsavhengigheten ($u_t \to 0$),
-og løsningen konvergerer mot den stasjonære løsningen av Poissonligningen
-fra Oppgave 3.
+Starttilstanden inneholder en sinuskomponent $5\sin(\pi x)$, men denne
+dempes gradvis av diffusjon. Etter hvert forsvinner tidsavhengigheten
+($u_t \to 0$), og løsningen konvergerer mot den stasjonære løsningen
+fra Poissonligningen i Oppgave~3.
 
 \section*{Diskretisering i rom}
-For å løse ligningen numerisk erstatter vi den kontinuerlige funksjonen
-med verdier i diskrete punkter $x_i$ i et romgitter.
-Vi bruker samme romgitter som i Oppgave 3 med $m = 100$ indre punkter
-og steglengde
+
+Vi bruker samme romgitter som i Oppgave~3 med $m=100$ indre punkter.
+Steglengden er
+
 \[
-h = \frac{2}{m+1} \approx 0.0198.
+h=\frac{2}{m+1}\approx 0.01980.
 \]
-Andrederivert approksimeres med sentral differanse:
+
+Andrederivert approksimeres med sentral differanse
+
 \[
-u_{xx}(x_i, t^n)
+u_{xx}(x_i,t^n)
 \approx
 \frac{u_{i-1}^n - 2u_i^n + u_{i+1}^n}{h^2}.
 \]
-Denne approksimasjonen erstatter den kontinuerlige andrederiverte
-med en kombinasjon av nabopunktene $u_{i-1}$, $u_i$ og $u_{i+1}$.
-Dermed kobles hvert punkt i gitteret til sine nærmeste naboer.
-Dette gir Laplace-matrisen
+
+Denne approksimasjonen kobler hvert punkt i gitteret til sine
+nærmeste naboer. Dette gir Laplace-matrisen
+
 \[
-L=\frac{1}{h^2}
+A=\frac{1}{h^2}
 \begin{pmatrix}
 -2 & 1 & & \\
 1 & -2 & 1 & \\
@@ -59,26 +108,47 @@ L=\frac{1}{h^2}
 & & 1 & -2
 \end{pmatrix}.
 \]
-Med $c=1$ får vi systemmatrisen $A = c^2L = L$.
-Varmeligningen kan da skrives som ODE-systemet
+
+Varmeligningen kan da skrives som et system av ordinære
+differensiallikninger
+
 \[
-\vec{u}_t = A\vec{u} - \vec{F},
-\qquad \vec{u}(0) = \vec{g},
+\dot{\mathbf{u}} = A\mathbf{u} - \mathbf{F},
+\qquad \mathbf{u}(0)=\mathbf{g}.
 \]
-der $\vec{g}$ er vektoren gitt av initialbetingelsen og
-$\vec{F}$ er høyresiden med innlagte Dirichlet-randbetingelser:
+
+Her er $\mathbf{g}$ vektoren gitt av initialbetingelsen,
+og kildetermen er
+
 \[
-F_1 \leftarrow f(x_1) - \frac{0}{h^2},
+f(x)=\cos(\pi x).
+\]
+
+Dirichlet-randbetingelsene gir et ekstra bidrag til høyresiden.
+Dette bygges inn i vektoren $\mathbf{F}$ som
+
+\[
+F_1 \leftarrow F_1 - \frac{u(-1)}{h^2},
 \qquad
-F_m \leftarrow f(x_m) - \frac{2}{h^2}.
+F_m \leftarrow F_m - \frac{u(1)}{h^2}.
+\]
+
+Siden $u(-1)=0$ og $u(1)=2$, blir
+
+\[
+F_m \leftarrow F_m - \frac{2}{h^2}.
 \]
 
 \section*{Tidsdiskretisering --- forlengs Euler}
+
 Tidsderivert approksimeres med forover-differanse
+
 \[
 u_t \approx \frac{u_i^{n+1}-u_i^n}{\Delta t}.
 \]
-Setter vi dette inn i PDE-en og løser for $u_i^{n+1}$, får vi
+
+Setter vi dette inn i PDE-en får vi oppdateringsformelen
+
 \[
 u_i^{n+1}
 =
@@ -89,46 +159,103 @@ u_i^n
 \frac{u_{i-1}^n - 2u_i^n + u_{i+1}^n}{h^2}
 -
 \cos(\pi x_i)
-\right),
-\qquad i=1,\dots,m.
-\]
-På matriseform skrives dette som
-\[
-\mathbf{u}^{n+1}
-=
-\mathbf{u}^n
-+
-\Delta t\,(A\mathbf{u}^n - \vec{F}).
+\right).
 \]
 
-\section*{Stabilitet}
-Forlengs Euler er stabil dersom
+På matriseform skrives dette som
+
 \[
-r = c^2\frac{\Delta t}{h^2} < \frac{1}{2}.
+\mathbf{u}^{n+1}=\mathbf{u}^n+\Delta t(A\mathbf{u}^n-\mathbf{F}).
 \]
-Siden $c=1$ får vi $r = \Delta t/h^2$.
-Vi velger $r = 0.4$, altså $\Delta t = 0.4\,h^2 \approx 1.57 \times 10^{-4}$,
-og dermed omtrent $N \approx 12\,752$ tidssteg for $T = 2.0$.
+
+\subsection*{Stabilitetsbetingelse}
+
+Forlengs Euler er stabil dersom
+
+\[
+r=\frac{\Delta t}{h^2}<\frac12.
+\]
+
+Vi velger $r=0.4$, som gir
+
+\[
+\Delta t=rh^2\approx 1.568\times10^{-4}.
+\]
+
+For sluttid $T=2.0$ gir dette omtrent $N\approx 12\,751$ tidssteg.
+
+\subsection*{Implementasjon}
+
+De viktigste linjene fra implementasjonen er
+
+\begin{lstlisting}
+h  = x[1] - x[0]
+r  = 0.4
+dt = r * h**2
+N  = int(T / dt) + 1
+
+# Kildevektor med randbidrag
+F = np.cos(np.pi * x[1:-1]).copy()
+F[0]  -= 0.0 / h**2
+F[-1] -= 2.0 / h**2
+
+# Initialbetingelse
+u = 1 + x[1:-1] + 5*np.sin(np.pi * x[1:-1])
+
+# Tidsintegrasjon (forlengs Euler)
+for n in range(N):
+    u = u + dt * (A @ u - F)
+\end{lstlisting}
+
+Randpunktene $u(-1,t)=0$ og $u(1,t)=2$ holdes faste og oppdateres
+ikke i tidsløkken.
 
 \section*{Sammenheng med Oppgave 3}
-Når $t \to \infty$ blir løsningen stasjonær og $u_t = 0$.
-Da får vi
+
+Når $t\to\infty$ blir $u_t=0$, og ligningen reduseres til
+
 \[
-0 = u_{xx} - \cos(\pi x)
-\quad \Rightarrow \quad
-u_{xx} = \cos(\pi x).
+u_{xx}=\cos(\pi x),
 \]
-Dette er nøyaktig Poissonligningen fra Oppgave 3 med samme randbetingelser.
+
+som er Poissonligningen fra Oppgave~3 med samme randbetingelser.
 Den stasjonære løsningen er
+
 \[
-u_\infty(x)
-=
--\frac{\cos(\pi x)}{\pi^2}
-+ x + 1 - \frac{1}{\pi^2}.
+u_\infty(x)=-\frac{\cos(\pi x)}{\pi^2}+x+1-\frac{1}{\pi^2}.
 \]
-Løsningen til varmeligningen konvergerer derfor mot denne når $t \to \infty$.
+
+\section*{Resultat}
+
+Figuren nedenfor viser løsningen ved
+$t=0.00,\;0.10,\;0.50,\;2.00$
+samt den stasjonære løsningen $u_\infty(x)$ (stiplet svart).
+Sinuskomponenten fra initialbetingelsen er tydelig ved $t=0$
+og dempes raskt. Ved $t=2.00$ sammenfaller løsningen nesten
+med den stasjonære.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{oppgave4.png}
+\caption{Løsningen av varmeligningen ved ulike tidspunkt samt
+den stasjonære løsningen fra Oppgave~3 (stiplet svart).}
+\end{figure}
 
 \medskip
-Den fullstendige implementasjonen er gitt i Python-filen \texttt{oppgave4.py}.
+Den fullstendige kildekoden er tilgjengelig på GitHub:\\
+\texttt{https://github.com/elajeans/IMAG2023/blob/main/oppgave4.py}
+
+\section*{Kilder Oppgave 3 og 4}
+
+\begin{itemize}
+
+\item NTNU (2026). \textit{Uke 6 – første uke i PDE-modulen}.  
+Kursmateriale i partielle differensiallikninger (Canvas).  
+\url{https://canvas.ntnu.no/courses/18866/pages/uke-6-forste-uke-i-pde-modulen}
+
+\item NTNU. \textit{Notater om Poissonligningen og varmeligningen}.  
+\url{https://aacchhee.github.io/ingmat2_ntnu/pages/page12.html}
+
+\end{itemize}
 
 \end{document}
