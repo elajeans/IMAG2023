@@ -1,0 +1,125 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[norsk]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{parskip}
+\usepackage{listings}
+\usepackage{xcolor}
+\geometry{margin=2.5cm}
+\setlength{\parskip}{4pt}
+\usepackage{graphicx}
+\usepackage{float}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  breaklines=true,
+  frame=single,
+  showstringspaces=false
+  literate={ø}{{\o}}1 {Ø}{{\O}}1 {å}{{\aa}}1 {Å}{{\AA}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1
+}
+
+\title{Oppgave 5: Laplacelikning (2D)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Problemstilling}
+
+Vi skal løse Laplacelikningen
+\[
+u_{xx}(x,y) + u_{yy}(x,y) = 0,
+\qquad -5 < x < 5,\quad 0 < y < 2,
+\]
+med randbetingelser
+\[
+u(-5,\,y) = \sin(2\pi y), \qquad
+u(5,\,y)  = \sin(2\pi y),
+\]
+\[
+u(x,\,0) = 0, \qquad
+u(x,\,2) = \sin(\pi x).
+\]
+Laplacelikningen beskriver stasjonær varmefordeling i et rektangulært domene,
+der temperaturfordelingen er gitt langs alle fire kanter.
+
+\section*{Diskretisering}
+
+Domenet diskretiseres med $N_x = 41$ punkter i $x$-retning og
+$N_y = 21$ punkter i $y$-retning, hvilket gir steglengder
+\[
+\Delta x = \frac{10}{N_x - 1} = 0.25,
+\qquad
+\Delta y = \frac{2}{N_y - 1} = 0.1.
+\]
+Begge andrederiverte approksimeres med sentral differanse:
+\[
+u_{xx}(x_i, y_j) \approx
+\frac{u_{i-1,j} - 2u_{i,j} + u_{i+1,j}}{\Delta x^2},
+\quad
+u_{yy}(x_i, y_j) \approx
+\frac{u_{i,j-1} - 2u_{i,j} + u_{i,j+1}}{\Delta y^2}.
+\]
+Settes disse inn i $u_{xx} + u_{yy} = 0$ og antas $\Delta x = \Delta y = h$,
+fås den klassiske fem-punkts Laplace-approksimasjonen:
+\[
+u_{i,j} = \frac{1}{4}
+\left(
+  u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1}
+\right).
+\]
+Hvert indre gitterpunkt er dermed lik gjennomsnittet av sine fire naboer.
+
+\section*{Numerisk løsning --- Jacobi-metoden}
+
+Ligningssystemet løses iterativt med \textbf{Jacobi-metoden}:
+ved hvert steg beregnes nye verdier for alle indre punkter simultant
+ut fra de \emph{gamle} verdiene, mens randbetingelsene holdes fast.
+Dette gjentas til løsningen konvergerer.
+
+Nøkkellinjene i implementasjonen er:
+
+\begin{figure}[H]
+\begin{lstlisting}[caption={Implementasjon av Jacobi-metoden}]
+for k in range(iterations):
+    u_ny = u.copy()
+
+    # Vektorisert oppdatering av alle indre punkter
+    u_ny[1:-1, 1:-1] = 0.25 * (
+        u[1:-1, 2:] +
+        u[1:-1, :-2] +
+        u[2:, 1:-1] +
+        u[:-2, 1:-1]
+    )
+
+    u[1:-1, 1:-1] = u_ny[1:-1, 1:-1]
+\end{lstlisting}
+\end{figure}
+
+Randbetingelsene settes før iterasjonen starter og holdes konstante gjennom hele iterasjonsprosessen. Oppdateringen er \emph{vektorisert} med NumPy for
+effektivitet; antall iterasjoner er satt til $5000$.
+
+\section*{Resultat}
+
+Figuren nedenfor viser den numeriske løsningen etter 5000 Jacobi-iterasjoner
+fremstilt som et fyllt konturplott. Løsningen reflekterer de pålagte
+randbetingelsene: sinusvariasjon langs venstre og høyre kant i
+$y$-retning, null langs bunnen, og sinusvariasjon langs toppen i
+$x$-retning.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{oppgave5.png}
+\caption{Numerisk løsning av Laplacelikningen etter 5000 Jacobi-iterasjoner.}
+\end{figure}
+
+
+\end{document}
